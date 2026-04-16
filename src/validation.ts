@@ -65,7 +65,9 @@ export function assertPermissionKey(key: unknown): asserts key is string {
 
   if (!PERMISSION_KEY_PATTERN.test(key)) {
     throw new ValidationError(
-      `permissionKey '${key}' does not match the required format (module.resource.action[.scope])`,
+      `permissionKey '${key}' does not match the required format. ` +
+      `Expected: module.resource.action[.scope] (e.g. 'clients.clients.view.all'). ` +
+      `Keys must be lowercase, dot-separated, with 2-5 segments.`,
       'permissionKey',
     );
   }

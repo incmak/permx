@@ -1,7 +1,8 @@
 import type { Request, Response, NextFunction } from 'express';
 import type { PermXInstance } from '../permx.js';
 import type { PermXMiddlewareConfig } from './types.js';
-import { validateUserId } from '../validation.js';
+import type { AuthorizationRequest } from './handler.js';
+import { handleAuthorization, handleApiAuthorization } from './handler.js';
 
 export interface PermXMiddleware {
   /** Per-route permission check: `router.use('/clients', auth.authorize('clients.view.all'), handler)` */
@@ -22,8 +23,9 @@ const defaultOnError = (_req: Request, res: Response, _error: unknown): void => 
 /**
  * Create Express middleware from a PermX instance.
  *
- * Ported from Sahal's `aceAuthorize` and `proxyAuthorize` middleware.
- * Decoupled from res.locals, FRA_FLAG_KEY, CatchAsync, and SendError.
+ * Thin wrapper around the framework-agnostic `handleAuthorization` and
+ * `handleApiAuthorization` functions. Maps Express request/response
+ * objects to the generic `AuthorizationRequest` / `AuthorizationOutcome`.
  */
 export function createPermXMiddleware(
   permx: PermXInstance,
@@ -38,74 +40,29 @@ export function createPermXMiddleware(
     onError = defaultOnError,
   } = middlewareConfig;
 
+  const toAuthRequest = (req: Request): AuthorizationRequest => ({
+    userId: extractUserId(req),
+    tenantId: extractTenantId?.(req),
+    isServiceCall: isServiceCall?.(req) ?? false,
+    isSuperAdmin: isSuperAdmin?.(req) ?? false,
+  });
+
   return {
     authorize(permissionKey: string) {
       return async (req: Request, res: Response, next: NextFunction) => {
-        try {
-          // Service-to-service bypass
-          if (isServiceCall?.(req)) return next();
-
-          // Super-admin bypass
-          if (isSuperAdmin?.(req)) return next();
-
-          const userId = extractUserId(req);
-          if (!userId) {
-            onDenied(req, res, permissionKey);
-            return;
-          }
-          validateUserId(userId);
-
-          const tenantId = extractTenantId?.(req) ?? undefined;
-          const result = await permx.authorize(userId, permissionKey, {
-            tenantId: tenantId ?? undefined,
-          });
-
-          if (!result.authorized) {
-            onDenied(req, res, permissionKey);
-            return;
-          }
-
-          return next();
-        } catch (error) {
-          onError(req, res, error);
-        }
+        const outcome = await handleAuthorization(permx, toAuthRequest(req), permissionKey);
+        if (outcome.action === 'allow') return next();
+        if (outcome.action === 'deny') return onDenied(req, res, outcome.permissionKey);
+        onError(req, res, outcome.error);
       };
     },
 
     authorizeApi(service: string) {
       return async (req: Request, res: Response, next: NextFunction) => {
-        try {
-          // Service-to-service bypass
-          if (isServiceCall?.(req)) return next();
-
-          // Super-admin bypass
-          if (isSuperAdmin?.(req)) return next();
-
-          const userId = extractUserId(req);
-          if (!userId) {
-            onDenied(req, res, 'api_access');
-            return;
-          }
-          validateUserId(userId);
-
-          const tenantId = extractTenantId?.(req) ?? undefined;
-          const result = await permx.authorizeApi(
-            userId,
-            service,
-            req.method,
-            req.path,
-            { tenantId: tenantId ?? undefined },
-          );
-
-          if (!result.authorized) {
-            onDenied(req, res, result.matched_key ?? 'api_access');
-            return;
-          }
-
-          return next();
-        } catch (error) {
-          onError(req, res, error);
-        }
+        const outcome = await handleApiAuthorization(permx, toAuthRequest(req), service, req.method, req.path);
+        if (outcome.action === 'allow') return next();
+        if (outcome.action === 'deny') return onDenied(req, res, outcome.permissionKey);
+        onError(req, res, outcome.error);
       };
     },
   };

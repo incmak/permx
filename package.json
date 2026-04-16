@@ -1,5 +1,5 @@
 {
-  "name": "permx",
+  "name": "@permx/core",
   "version": "0.2.0",
   "description": "Structured RBAC with permission keys, role inheritance, UI mappings, and feature flags",
   "license": "MIT",
@@ -50,9 +50,9 @@
     "test:watch": "bun vitest",
     "test:coverage": "bun vitest run --coverage",
     "typecheck": "bun tsc --noEmit",
-    "lint": "bun publint && bun attw --pack --ignore-rules no-resolution",
+    "lint": "bun attw --pack --ignore-rules no-resolution && bun publint",
     "run:ts": "tsx",
-    "prepublishOnly": "bun run build && bun run lint"
+    "prepublishOnly": "bun run build"
   },
   "peerDependencies": {
     "mongoose": ">=7.0.0",

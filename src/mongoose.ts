@@ -5,3 +5,10 @@ export type { SchemaFactoryConfig, PermXModels } from './mongoose/schemas.js';
 export { MongooseDataProvider } from './mongoose/data-provider.js';
 export { tenantPlugin } from './mongoose/tenant-plugin.js';
 export type { TenantPluginOptions } from './mongoose/tenant-plugin.js';
+export type {
+  CreateModuleInput,
+  CreatePermissionInput,
+  CreateRoleInput,
+  AssignRoleInput,
+  CreatedDocument,
+} from './mongoose/types.js';

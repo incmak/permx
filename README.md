@@ -3,7 +3,7 @@
 Structured RBAC with permission keys, role inheritance, UI mappings, and feature flags.
 
 ```
-npm install permx
+npm install @permx/core
 ```
 
 ## Why PermX?
@@ -24,14 +24,14 @@ Existing RBAC libraries (CASL, Casbin, AccessControl) lack structured permission
 ### 1. Install
 
 ```bash
-npm install permx mongoose express
+npm install @permx/core mongoose express
 ```
 
 ### 2. Initialize
 
 ```typescript
 import mongoose from 'mongoose';
-import { createPermX } from 'permx/mongoose';
+import { createPermX } from '@permx/core/mongoose';
 
 await mongoose.connect('mongodb://localhost:27017/myapp');
 
@@ -46,7 +46,7 @@ await permx.migrate();
 ### 3. Protect Routes
 
 ```typescript
-import { createPermXMiddleware } from 'permx/express';
+import { createPermXMiddleware } from '@permx/core/express';
 
 const auth = createPermXMiddleware(permx, {
   extractUserId: (req) => req.user?.id,
@@ -75,7 +75,7 @@ const perms = await permx.getUserPermissions(userId);
 Permissions follow the format: `{module}.{resource}:{field}.{action}.{scope}`
 
 ```typescript
-import { buildDerivedKey, parsePermissionKey } from 'permx';
+import { buildDerivedKey, parsePermissionKey } from '@permx/core';
 
 buildDerivedKey({
   module: 'people',
@@ -142,11 +142,11 @@ Feature Flags:    Gradual rollout capabilities (per-tenant)
 
 | Import | Purpose | Dependencies |
 |---|---|---|
-| `permx` | Core types, engine, utilities | **Zero** |
-| `permx/mongoose` | MongoDB adapter + schema factory | `mongoose` |
-| `permx/express` | Express middleware | `express` |
+| `@permx/core` | Core types, engine, utilities | **Zero** |
+| `@permx/core/mongoose` | MongoDB adapter + schema factory | `mongoose` |
+| `@permx/core/express` | Express middleware | `express` |
 
-### `permx` — Core (Zero Dependencies)
+### `@permx/core` — Core (Zero Dependencies)
 
 ```typescript
 import {
@@ -159,6 +159,12 @@ import {
   detectCircularInheritance,
   matchPathPattern,
   createPermXCore,
+
+  // Framework-agnostic authorization
+  handleAuthorization,
+  handleApiAuthorization,
+  type AuthorizationRequest,
+  type AuthorizationOutcome,
 
   // Cache
   TtlCache,
@@ -182,10 +188,10 @@ import {
   PERMISSION_ACTIONS,
   PERMISSION_SCOPES,
   ROLE_TYPES,
-} from 'permx';
+} from '@permx/core';
 ```
 
-### `permx/mongoose` — MongoDB Adapter
+### `@permx/core/mongoose` — MongoDB Adapter
 
 ```typescript
 import {
@@ -198,17 +204,17 @@ import {
   type MongoosePermXInstance,
   type SchemaFactoryConfig,
   type PermXModels,
-} from 'permx/mongoose';
+} from '@permx/core/mongoose';
 ```
 
-### `permx/express` — Middleware
+### `@permx/core/express` — Middleware
 
 ```typescript
 import {
   createPermXMiddleware,
   type PermXMiddleware,
   type PermXMiddlewareConfig,
-} from 'permx/express';
+} from '@permx/core/express';
 ```
 
 ## Configuration
@@ -216,7 +222,7 @@ import {
 ### Full Configuration Example
 
 ```typescript
-import { createPermX } from 'permx/mongoose';
+import { createPermX } from '@permx/core/mongoose';
 
 const permx = createPermX({
   // Required: your Mongoose connection
@@ -262,7 +268,7 @@ const permx = createPermX({
 ### Express Middleware Configuration
 
 ```typescript
-import { createPermXMiddleware } from 'permx/express';
+import { createPermXMiddleware } from '@permx/core/express';
 
 const auth = createPermXMiddleware(permx, {
   // Required: how to get user ID from the request
@@ -298,12 +304,43 @@ router.get('/clients', auth.authorize('clients.clients.view.all'), handler);
 router.use(auth.authorizeApi('client-hq'));
 ```
 
-## Building Custom Adapters
+## Framework-Agnostic Authorization
+
+The core package exports `handleAuthorization` and `handleApiAuthorization` — pure async functions that work with any HTTP framework (Hono, Fastify, Koa, Next.js, etc.):
+
+```typescript
+import {
+  handleAuthorization,
+  handleApiAuthorization,
+  type AuthorizationRequest,
+  type AuthorizationOutcome,
+} from '@permx/core';
+
+// 1. Map your framework's request to AuthorizationRequest
+const request: AuthorizationRequest = {
+  userId: getUserIdFromYourFramework(),
+  tenantId: getTenantIdFromYourFramework(),
+  isServiceCall: false,
+  isSuperAdmin: false,
+};
+
+// 2. Call the handler
+const outcome = await handleAuthorization(permx, request, 'clients.view.all');
+
+// 3. Map the outcome to your framework's response
+if (outcome.action === 'allow')  { /* next() */ }
+if (outcome.action === 'deny')   { /* 403 response */ }
+if (outcome.action === 'error')  { /* 500 response */ }
+```
+
+The Express middleware (`@permx/core/express`) is a thin wrapper around these functions. See [`examples/hono-adapter.ts`](examples/hono-adapter.ts) for a complete Hono adapter in ~20 lines.
+
+## Building Custom Data Adapters
 
 PermX's core engine is database-agnostic. To use a different database, implement the `PermXDataProvider` interface:
 
 ```typescript
-import { createPermXCore, type PermXDataProvider } from 'permx';
+import { createPermXCore, type PermXDataProvider } from '@permx/core';
 
 class PrismaDataProvider implements PermXDataProvider {
   async getUserRoles(userId: string) { /* Prisma queries */ }
@@ -322,21 +359,23 @@ const permx = createPermXCore(new PrismaDataProvider(), {
 ## Architecture
 
 ```
-permx (core — zero deps)
+@permx/core (zero deps)
 ├── types/           8 type definition files
 ├── engine/          Permission key parser, DFS resolver, circular detector, path matcher
+├── middleware/
+│   └── handler.ts   Framework-agnostic handleAuthorization + handleApiAuthorization
 ├── cache/           Generic TTL cache
 ├── errors.ts        Error class hierarchy
 └── permx.ts         createPermXCore() factory
 
-permx/mongoose (peer: mongoose)
+@permx/core/mongoose (peer: mongoose)
 ├── schemas.ts       Schema factory (Better-Auth pattern)
 ├── data-provider.ts MongooseDataProvider implements PermXDataProvider
 ├── factory.ts       createPermX() wires schemas + provider + core
 └── tenant-plugin.ts Lightweight opt-in tenant isolation
 
-permx/express (peer: express)
-└── authorize.ts     createPermXMiddleware() with authorize + authorizeApi
+@permx/core/express (peer: express)
+└── authorize.ts     Thin Express wrapper over handler.ts
 ```
 
 ## Development

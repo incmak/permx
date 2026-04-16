@@ -59,3 +59,7 @@ export { assertPermissionKey, isValidPermissionKey, validateUserId } from './val
 // Events
 export { PermXEmitter } from './events.js';
 export type { PermXEventMap, PermXEventName } from './events.js';
+
+// Middleware (framework-agnostic)
+export { handleAuthorization, handleApiAuthorization } from './middleware/handler.js';
+export type { AuthorizationRequest, AuthorizationOutcome } from './middleware/handler.js';
