@@ -87,12 +87,30 @@
     "access-control",
     "authorization",
     "roles",
+    "acl",
     "feature-flags",
     "multi-tenant",
+    "middleware",
+    "permission-management",
+    "role-based-access-control",
     "mongoose",
     "express",
-    "react"
+    "fastify",
+    "hono",
+    "koa",
+    "nextjs",
+    "node",
+    "typescript"
   ],
+  "homepage": "https://github.com/Umair-N/permx#readme",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Umair-N/permx.git"
+  },
+  "bugs": {
+    "url": "https://github.com/Umair-N/permx/issues"
+  },
+  "author": "Umair Najeeb",
   "engines": {
     "node": ">=18.0.0"
   }

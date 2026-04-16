@@ -1,14 +1,29 @@
 # PermX
 
-Structured RBAC with permission keys, role inheritance, UI mappings, and feature flags.
+[![npm version](https://img.shields.io/npm/v/@permx/core.svg)](https://www.npmjs.com/package/@permx/core)
+[![TypeScript](https://img.shields.io/badge/TypeScript-5.7+-blue.svg)](https://www.typescriptlang.org/)
+[![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)](https://opensource.org/licenses/MIT)
+[![Zero Dependencies](https://img.shields.io/badge/core_deps-zero-brightgreen.svg)](#entry-points)
+
+Structured RBAC for Node.js. Permission keys with meaning, role inheritance that handles diamonds and cycles, UI-aware mappings, and multi-tenant support — works with any HTTP framework and any database.
 
 ```
 npm install @permx/core
 ```
 
-## Why PermX?
+## The Problem
 
-Existing RBAC libraries (CASL, Casbin, AccessControl) lack structured permission keys, UI-aware mappings, multi-layer resolution, and React gating components. PermX fills this gap.
+Most RBAC libraries give you flat string permissions (`"read:users"`) or abstract policy languages. When your app grows, you end up with:
+
+- Hundreds of unstructured permission strings with no consistent naming
+- Authorization logic scattered across middleware, controllers, and frontend code
+- No connection between backend permissions and what the UI should show or hide
+- SaaS subscription tiers bolted on as a separate system from role permissions
+- Middleware locked to Express, unusable with Fastify, Hono, or Next.js
+
+PermX solves these with **structured permission keys** (`module.resource:field.action.scope`), **UI mappings** baked into each permission, a **three-layer model** (roles + subscriptions + feature flags), and a **framework-agnostic core** with zero dependencies.
+
+## How It Compares
 
 | Capability | CASL | Casbin | Permit.io | **PermX** |
 |---|---|---|---|---|
@@ -16,7 +31,7 @@ Existing RBAC libraries (CASL, Casbin, AccessControl) lack structured permission
 | UI mappings (routes/components/fields) | No | No | No | **Yes** |
 | 3-layer model (regular + subscription + flags) | No | No | Partial | **Yes** |
 | Role inheritance with DFS + cycle protection | No | Policy | Managed | **Yes** |
-| React component suite | Partial | No | No | **Soon** |
+| Framework-agnostic (Express, Hono, Fastify, Koa) | Express | Yes | SaaS | **Yes** |
 | DB-agnostic with adapter pattern | No | Yes | SaaS | **Yes** |
 
 ## Quick Start (5 minutes)
