@@ -5,6 +5,37 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [@permx/core 0.4.0] - 2026-04-17
+
+### Added
+
+- **Per-user permission cache with granular invalidation** — `authorize()` and `getUserPermissions()` now share a per-user (per-tenant when multi-tenancy is enabled) TTL cache. Opt in via existing `cache: { ttl }` config.
+  - `permx.invalidateUser(userId, { tenantId? })` — clear one user's cache entry after a role change
+  - `permx.invalidateAll()` — clear user cache + api-map cache; use after bulk permission/role schema changes
+  - `permx.invalidateCache()` — kept as a deprecated alias of `invalidateAll()` for backwards compatibility
+- **Dev-mode typo guardrail** — `dev.knownKeys` config option logs a one-time warning when `authorize()` is called with a key not in the provided set. Pair with `Object.values(definePermissions(...))` for full coverage. Warnings deduplicated per key; omit `dev` in production for zero overhead.
+- **`DevConfig` type** exported from the main entry point.
+- 11 new tests (228 total) — 7 for cache invalidation behaviour, 4 for dev-mode warnings.
+
+### Changed
+
+- No breaking changes. All additions are backwards-compatible.
+
+## [@permx/react 0.2.0] - 2026-04-17
+
+### Added
+
+- **`errorFallback` prop** on `<PermXProvider>` — `(error, retry) => ReactNode`. Renders when the initial fetch (or a subsequent `refresh()`) fails; the supplied `retry` function re-triggers the fetch. Falls back to `fallback` when not provided (existing behaviour).
+- **`usePermXRefresh()` hook** — returns a stable `refresh()` function that re-fetches permissions without re-mounting the provider. Resolves to `{ ok: true }` or `{ ok: false, error }`. Pair with backend `permx.invalidateUser(id)` after role changes to propagate new permissions without a page reload.
+- **`usePermXError()` hook** — exposes the current fetch error (or `null`) to any descendant. Useful for toasts, banners, and programmatic error handling outside `<PermXProvider>`'s render prop.
+- **Store-level `refresh()`** with stale-response protection — concurrent refreshes use an internal token so only the last call's result is applied.
+- 8 new tests (65 total) covering error rendering, retry, refresh success/failure, and the error hook.
+
+### Changed
+
+- `PermissionState` now includes an `error: Error | null` field (additive, non-breaking).
+- `@permx/core` peer dependency bumped to `>=0.4.0` so the new invalidation APIs referenced by the documentation are available.
+
 ## [0.3.2] - 2026-04-17
 
 ### Changed
