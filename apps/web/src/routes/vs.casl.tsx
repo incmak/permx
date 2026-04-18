@@ -24,8 +24,8 @@ const WEBPAGE_JSON_LD = JSON.stringify({
   primaryImageOfPage: `${SITE_URL}og.png`,
   inLanguage: 'en',
   about: [
-    { '@type': 'SoftwareApplication', name: 'PermX', url: SITE_URL },
-    { '@type': 'SoftwareApplication', name: 'CASL', url: 'https://casl.js.org' },
+    { '@type': 'Thing', name: 'PermX', url: SITE_URL },
+    { '@type': 'Thing', name: 'CASL', url: 'https://casl.js.org' },
   ],
 })
 
