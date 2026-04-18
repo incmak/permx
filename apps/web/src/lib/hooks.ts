@@ -162,18 +162,29 @@ export function useNpmPackage(pkg: string): NpmInfo {
 
     let cancelled = false
     const load = async () => {
-      const [reg, week, month] = await Promise.all([
-        fetchJson<{ 'dist-tags'?: { latest?: string } }>(
-          `https://registry.npmjs.org/${pkg}`,
-        ),
-        fetchJson<{ downloads: number }>(
-          `https://api.npmjs.org/downloads/point/last-week/${pkg}`,
-        ),
-        fetchJson<{ downloads: number }>(
-          `https://api.npmjs.org/downloads/point/last-month/${pkg}`,
-        ),
-      ])
+      const reg = await fetchJson<{
+        'dist-tags'?: { latest?: string }
+        time?: { created?: string }
+      }>(`https://registry.npmjs.org/${pkg}`)
       if (cancelled) return
+
+      const created = reg?.time?.created
+      const ageMs = created ? Date.now() - new Date(created).getTime() : 0
+      const MIN_AGE_MS = 36 * 60 * 60 * 1000
+      const skipDownloads = !created || ageMs < MIN_AGE_MS
+
+      const [week, month] = skipDownloads
+        ? [null, null]
+        : await Promise.all([
+            fetchJson<{ downloads: number }>(
+              `https://api.npmjs.org/downloads/point/last-week/${pkg}`,
+            ),
+            fetchJson<{ downloads: number }>(
+              `https://api.npmjs.org/downloads/point/last-month/${pkg}`,
+            ),
+          ])
+      if (cancelled) return
+
       const next: NpmInfo = {
         name: pkg,
         version: reg?.['dist-tags']?.latest ?? null,
