@@ -13,14 +13,17 @@ const BASE_PATH = (process.env.PERMX_BASE ?? '/').replace(/\/?$/, '/')
 const SITE_URL = `${SITE_ORIGIN}${BASE_PATH}`
 const FALLBACK_LASTMOD = new Date().toISOString().slice(0, 10)
 
+// Framework (TanStack Start on CF Workers) 307-redirects trailing-slash
+// URLs to non-trailing form. Canonical must match the served URL — so
+// sub-pages use non-trailing-slash form. Root (homepage) keeps its slash.
 const PAGES = [
   { path: '', priority: '1.0', changefreq: 'weekly', routeFile: 'index.tsx' },
-  { path: 'docs/', priority: '0.7', changefreq: 'monthly', routeFile: 'docs.index.tsx' },
-  { path: 'docs/getting-started/', priority: '0.9', changefreq: 'monthly', routeFile: 'docs.getting-started.tsx' },
-  { path: 'vs/', priority: '0.7', changefreq: 'monthly', routeFile: 'vs.index.tsx' },
-  { path: 'vs/casl/', priority: '0.8', changefreq: 'monthly', routeFile: 'vs.casl.tsx' },
-  { path: 'vs/casbin/', priority: '0.8', changefreq: 'monthly', routeFile: 'vs.casbin.tsx' },
-  { path: 'vs/permit/', priority: '0.8', changefreq: 'monthly', routeFile: 'vs.permit.tsx' },
+  { path: 'docs', priority: '0.7', changefreq: 'monthly', routeFile: 'docs.index.tsx' },
+  { path: 'docs/getting-started', priority: '0.9', changefreq: 'monthly', routeFile: 'docs.getting-started.tsx' },
+  { path: 'vs', priority: '0.7', changefreq: 'monthly', routeFile: 'vs.index.tsx' },
+  { path: 'vs/casl', priority: '0.8', changefreq: 'monthly', routeFile: 'vs.casl.tsx' },
+  { path: 'vs/casbin', priority: '0.8', changefreq: 'monthly', routeFile: 'vs.casbin.tsx' },
+  { path: 'vs/permit', priority: '0.8', changefreq: 'monthly', routeFile: 'vs.permit.tsx' },
 ]
 
 async function routeMtime(routeFile) {

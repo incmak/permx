@@ -33,8 +33,8 @@ export default function Footer() {
           links={[
             ['Docs', '/docs'],
             ['Getting Started', '/docs/getting-started'],
-            ['Anatomy', '#anatomy'],
-            ['Three-Layer Model', '#layers'],
+            ['Anatomy', '/#anatomy'],
+            ['Three-Layer Model', '/#layers'],
             ['Alternatives', '/vs'],
             ['PermX vs CASL', '/vs/casl'],
             ['PermX vs Casbin', '/vs/casbin'],
@@ -78,25 +78,39 @@ function FooterCol({ title, links }: FooterColProps) {
       <ul className="mt-3 space-y-2">
         {links.map(([label, href]) => {
           const external = href.startsWith('http')
-          const hash = href.startsWith('#')
           const linkClass =
             'font-mono text-[0.8rem] text-(--ink) underline decoration-(--rule) underline-offset-4 hover:decoration-(--ink)'
-          return (
-            <li key={label}>
-              {external || hash ? (
+          if (external) {
+            return (
+              <li key={label}>
                 <a
                   href={href}
-                  target={external ? '_blank' : undefined}
-                  rel={external ? 'noreferrer' : undefined}
+                  target="_blank"
+                  rel="noreferrer"
                   className={linkClass}
                 >
                   {label}
                 </a>
-              ) : (
-                <Link to={href} className={linkClass}>
+              </li>
+            )
+          }
+          const hashIdx = href.indexOf('#')
+          if (hashIdx >= 0) {
+            const path = href.slice(0, hashIdx) || '/'
+            const hash = href.slice(hashIdx + 1)
+            return (
+              <li key={label}>
+                <Link to={path} hash={hash} className={linkClass}>
                   {label}
                 </Link>
-              )}
+              </li>
+            )
+          }
+          return (
+            <li key={label}>
+              <Link to={href} className={linkClass}>
+                {label}
+              </Link>
             </li>
           )
         })}

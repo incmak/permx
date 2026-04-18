@@ -5,12 +5,12 @@ import LogoMark from './LogoMark'
 import ThemeToggle from './ThemeToggle'
 
 const SECTION_IDS = ['anatomy', 'layers', 'compare', 'faq', 'install'] as const
-const NAV_ITEMS: Array<[string, string]> = [
-  ['Anatomy', '#anatomy'],
-  ['Layers', '#layers'],
-  ['Compare', '#compare'],
-  ['FAQ', '#faq'],
-  ['Install', '#install'],
+const NAV_ITEMS: Array<[string, (typeof SECTION_IDS)[number]]> = [
+  ['Anatomy', 'anatomy'],
+  ['Layers', 'layers'],
+  ['Compare', 'compare'],
+  ['FAQ', 'faq'],
+  ['Install', 'install'],
 ]
 
 export default function Header() {
@@ -47,17 +47,17 @@ export default function Header() {
         </Link>
 
         <nav className="ml-auto hidden items-center gap-7 lg:flex">
-          {NAV_ITEMS.map(([label, href]) => {
-            const id = href.slice(1)
+          {NAV_ITEMS.map(([label, id]) => {
             const isActive = active === id
             return (
-              <a
-                key={href}
-                href={href}
+              <Link
+                key={id}
+                to="/"
+                hash={id}
                 className={`nav-link ${isActive ? 'is-active' : ''}`}
               >
                 {label}
-              </a>
+              </Link>
             )
           })}
           <Link to="/docs" className="nav-link">
@@ -79,13 +79,14 @@ export default function Header() {
         <div className="ml-auto flex items-center gap-3 lg:ml-0">
           <ThemeToggle />
 
-          <a
-            href="#install"
+          <Link
+            to="/"
+            hash="install"
             className="btn btn--cobalt hidden lg:inline-flex"
           >
             <span aria-hidden>↓</span>
             install
-          </a>
+          </Link>
 
           <button
             type="button"
@@ -102,15 +103,16 @@ export default function Header() {
 
     {open && (
         <div className="mobile-nav lg:hidden">
-          {NAV_ITEMS.map(([label, href]) => (
-            <a
-              key={href}
-              href={href}
+          {NAV_ITEMS.map(([label, id]) => (
+            <Link
+              key={id}
+              to="/"
+              hash={id}
               onClick={() => setOpen(false)}
               className="font-display text-[2.25rem] leading-none text-(--ink)"
             >
               {label}
-            </a>
+            </Link>
           ))}
           <Link
             to="/docs"
@@ -135,14 +137,15 @@ export default function Header() {
           >
             GitHub ↗
           </a>
-          <a
-            href="#install"
+          <Link
+            to="/"
+            hash="install"
             onClick={() => setOpen(false)}
             className="btn btn--cobalt mt-4 self-start"
           >
             <span aria-hidden>↓</span>
             install
-          </a>
+          </Link>
         </div>
       )}
     </>

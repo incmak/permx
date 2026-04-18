@@ -11,8 +11,7 @@ export const BASE_PATH = rawBase.endsWith('/') ? rawBase : `${rawBase}/`
 export const SITE_URL = `${SITE_ORIGIN}${BASE_PATH}`
 
 export function siteUrl(path: string = ''): string {
-  const trimmed = path.replace(/^\//, '')
+  const trimmed = path.replace(/^\//, '').replace(/\/$/, '')
   if (!trimmed) return SITE_URL
-  const withTrailing = trimmed.endsWith('/') ? trimmed : `${trimmed}/`
-  return `${SITE_URL}${withTrailing}`
+  return `${SITE_ORIGIN}${BASE_PATH}${trimmed}`
 }

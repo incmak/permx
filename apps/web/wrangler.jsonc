@@ -3,7 +3,7 @@
   "name": "permx-web",
   "compatibility_date": "2026-04-17",
   "compatibility_flags": ["nodejs_compat"],
-  "main": "@tanstack/react-start/server-entry",
+  "main": "src/worker.ts",
   "routes": [
     { "pattern": "permx.nuvaynlabs.com", "custom_domain": true }
   ],
